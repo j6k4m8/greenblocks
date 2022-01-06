@@ -147,7 +147,6 @@
             .modal {
                 position: fixed;
                 width: 70%;
-                height: 30%;
                 top: 15%;
                 left: 15%;
                 display: flex;
@@ -197,6 +196,7 @@
                 position: fixed;
                 bottom: 0;
                 width: 100%;
+                max-width: 800px;
                 padding-top: 30px;
                 text-align: center;
             }
@@ -231,6 +231,56 @@
         </style>
 
         <script>
+            // Copies a string to the clipboard. Must be called from within an
+            // event handler such as click. May return false if it failed, but
+            // this is not always possible. Browser support for Chrome 43+,
+            // Firefox 42+, Safari 10+, Edge and Internet Explorer 10+.
+            // Internet Explorer: The clipboard feature may be disabled by
+            // an administrator. By default a prompt is shown the first
+            // time the clipboard is used (per session).
+            function copyToClipboard(text) {
+                // https://stackoverflow.com/a/33928558/979255
+                if (window.clipboardData && window.clipboardData.setData) {
+                    // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
+                    return window.clipboardData.setData("Text", text);
+                } else if (
+                    document.queryCommandSupported &&
+                    document.queryCommandSupported("copy")
+                ) {
+                    var textarea = document.createElement("textarea");
+                    textarea.textContent = text;
+                    textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in Microsoft Edge.
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        return document.execCommand("copy"); // Security exception may be thrown by some browsers.
+                    } catch (ex) {
+                        console.warn("Copy to clipboard failed.", ex);
+                        return prompt("Copy to clipboard: Ctrl+C, Enter", text);
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                }
+            }
+
+            function createUUID() {
+                // https://stackoverflow.com/a/66332305/979255
+                return window.URL.createObjectURL(new Blob([])).substr(-36);
+            }
+
+            // Check to see if there's a UUID stored in localStorage. If not,
+            // generate a new one and store it.
+            function getUUID() {
+                var uuid = localStorage.getItem("uuid");
+                if (uuid === null || uuid === "undefined") {
+                    uuid = createUUID();
+                    localStorage.setItem("uuid", uuid);
+                }
+                return uuid;
+            }
+
+            getUUID();
+
             const GuessRow = {
                 name: "GuessRow",
                 props: {
@@ -318,7 +368,7 @@
                             return;
                         }
 
-                        fetch("/game/1234", {
+                        fetch(`/game/${getUUID()}`, {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
@@ -337,6 +387,10 @@
                                 this.editingGuess = "";
                                 this.activeIndex = 0;
                             });
+                    },
+
+                    copyScoreToClipboard() {
+                        copyToClipboard(this.scoremoji);
                     },
                 },
 
@@ -364,7 +418,7 @@
                             self.submitGuess();
                         }
                     };
-                    fetch("/game/1234")
+                    fetch(`/game/${getUUID()}`)
                         .then((res) => res.json())
                         .then((data) => {
                             console.log(data);
@@ -387,10 +441,36 @@
                             this.gameState = data;
                         });
                 },
+
+                // computed:
+                computed: {
+                    scoremoji() {
+                        // Replace "CORRECT" with a green box:
+                        function letterToEmoji(letter) {
+                            if (letter === "CORRECT") {
+                                return "🟩";
+                            } else if (letter === "WRONG_LOCATION") {
+                                return "🟨";
+                            } else if (letter === "INCORRECT_LETTER") {
+                                return "⬜";
+                            }
+                            return "";
+                        }
+                        return this.gameState.scores
+                            .map((score) => {
+                                return score.map(letterToEmoji).join("");
+                            })
+                            .join("\n");
+                    },
+                },
+
                 template: `
                 <div>
                     <div class="modal win-modal" :class="gameState.status == 'WON' ? 'visible' : ''">
                         <b class="modal-title">You win!</b>
+                        <p>
+                            <textarea @click="copyScoreToClipboard()" style="font-family: monospace; text-align: center; background: transparent; border: none; font-size: 1.5em" cols=20 rows=7>{{scoremoji}}</textarea>
+                        </p>
                         <p>
                             <button class="modal-action-button" @click="resetState()">Play again?</button>
                         </p>

@@ -141,7 +141,7 @@ class JSONFileGameStatePersister(GameStatePersister):
         games[uuid] = state
         # Write the new contents:
         with open(self._filename, "w") as f:
-            json.dump(games, f)
+            json.dump(games, f, indent=4)
 
     def load_game(self, uuid: str):
         print("Loading game state", uuid)

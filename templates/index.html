@@ -342,14 +342,19 @@
                         required: false,
                     },
                 },
+                methods: {
+                    handleClick(index) {
+                        this.$emit("update:activeIndex", index);
+                    },
+                },
                 template: `
                     <div class="guess-row">
                         <div class="guess-letter" :class="score[index] + ' ' + (index === activeIndex ? 'active' : '')"
-                            v-for="(letter, index) in guess" :key="letter + index.toString()">
+                            v-for="(letter, index) in guess" :key="letter + index.toString()" @click="handleClick(index)">
                             {{ letter }}
                         </div>
                         <div class="guess-letter" :class="score[index] + ' ' + ((index+guess.length) === activeIndex ? 'active' : '')"
-                            v-for="index in 5 - guess.length" :key="'blank-' + index.toString()">
+                            v-for="index in 5 - guess.length" :key="'blank-' + index.toString()" @click="handleClick(index + guess.length)">
                             &nbsp;
                         </div>
                     </div>
@@ -377,7 +382,18 @@
                 },
 
                 methods: {
+                    setActiveIndex(index) {
+                        console.log(index);
+                        this.activeIndex = index;
+                    },
                     updateLetter(index, letter) {
+                        // If the guess isn't long enough, pad it with spaces:
+                        if (this.editingGuess.length < index) {
+                            this.editingGuess += " ".repeat(
+                                index - (this.editingGuess.length - 1)
+                            );
+                            index--;
+                        }
                         this.editingGuess =
                             this.editingGuess.substr(0, index) +
                             letter +
@@ -542,7 +558,7 @@
                     </div>
                     <div v-if="this.gameState.game_status === 'IN_PROGRESS'">
                         <div>
-                            <GuessRow :guess="editingGuess" :score="['','','','','']" :activeIndex="activeIndex" />
+                            <GuessRow :guess="editingGuess" :score="['','','','','']" :activeIndex="activeIndex" v-on:update:activeIndex="setActiveIndex($event)" />
                         </div>
                         <div v-if="gameState.guesses_remaining - 1 > 0">
                             <div v-for="remaining in (gameState.guesses_remaining - 1)">

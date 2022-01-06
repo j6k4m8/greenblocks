@@ -4,27 +4,48 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Many Green Blocks</title>
+        <title>Green Blocks | jordan.matelsky.com</title>
         <script src="https://unpkg.com/vue"></script>
+        <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-4RCVMZSKW6"
+        ></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+
+            gtag("config", "G-4RCVMZSKW6");
+        </script>
     </head>
     <body>
         <div id="app"></div>
 
         <footer>
-            <small>
-                <a
-                    class="footer-github-link"
-                    href="https://github.com/j6k4m8/manygreenblocks"
-                    target="_blank"
-                >
-                    This game is open-source on GitHub
-                </a>
+            <br />
+            <small
+                style="
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                "
+            >
                 <a
                     class="footer-github-link"
                     href="https://twitter.com/j6m8"
                     target="_blank"
                 >
-                    I'm @j6m8 on Twitter
+                    @j6m8
+                </a>
+                <a
+                    class="footer-github-link"
+                    href="https://github.com/j6k4m8/manygreenblocks"
+                    target="_blank"
+                >
+                    Source Code on GitHub
                 </a>
             </small>
         </footer>
@@ -32,25 +53,26 @@
         <style>
             body {
                 font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: #2a2a2a;
+                color: white;
+            }
+
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
             }
 
             footer {
-                /* stick to the bottom */
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                /* Pad the bottom to the footer's height */
-                padding-bottom: 50px;
-                /* Pad the top to the footer's height */
-                padding-top: 50px;
                 text-align: center;
             }
             footer .footer-github-link {
-                color: #333;
+                color: rgb(179, 179, 179);
                 font-weight: bold;
                 /* Make things slightly buttonier */
                 padding: 5px;
-                border: 1px solid #333;
+                border: 1px solid rgb(173, 173, 173);
                 border-radius: 5px;
                 /* Make things slightly buttonier */
                 text-decoration: none;
@@ -64,26 +86,30 @@
             }
             .game-container {
                 text-align: center;
-                margin: auto;
                 max-width: 800px;
+                width: 100%;
+                margin: auto;
             }
             .guess-row {
                 /* A row of five letters */
                 display: flex;
                 flex-direction: row;
-                flex-wrap: wrap;
                 justify-content: center;
                 align-items: center;
                 margin: 0;
                 padding: 0;
+                /*  Don't permit linewrap */
+                white-space: nowrap;
+                max-width: 800px;
+                width: 100%;
             }
 
             .guess-letter {
                 /* A single letter. Black outline, bold letter. */
                 font-size: 2em;
                 font-weight: bold;
-                color: black;
-                border: 5px solid black;
+                color: white;
+                border: 5px solid #666666;
                 height: 2em;
                 width: 2em;
                 padding: 0;
@@ -116,6 +142,92 @@
                 border: 5px solid rgb(88, 60, 17);
                 color: rgb(27, 27, 27);
             }
+
+            /* Modals */
+            .modal {
+                position: fixed;
+                width: 70%;
+                height: 30%;
+                top: 15%;
+                left: 15%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 100;
+                display: none;
+                pointer-events: none;
+                transition: opacity 0.15s ease-in-out;
+            }
+            .modal.visible {
+                display: flex;
+                opacity: 1;
+                pointer-events: all;
+            }
+            .win-modal {
+                /* A modal for when the player wins */
+                background-color: rgba(38, 87, 5, 0.884);
+                border: 10px solid #003f00;
+            }
+            .modal-title {
+                font-size: 3em;
+                font-weight: bolder;
+            }
+
+            .modal-action-button {
+                /* A button to close the modal */
+                font-size: 1.5em;
+                font-weight: bold;
+                padding: 0.5em 1em;
+                border: 4px solid #003f00;
+                border-radius: 1px;
+                text-decoration: none;
+                cursor: pointer;
+                margin: 0 5px;
+            }
+
+            .lose-modal {
+                /* A modal for when the player loses */
+                background-color: rgba(44, 44, 44, 0.884);
+                border: 10px solid #181818;
+            }
+
+            .keyboard {
+                /* stick to the bottom */
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                padding-top: 30px;
+                text-align: center;
+            }
+
+            .keyboard-row {
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                margin: 0;
+                padding: 0;
+                /* flex-wrap: wrap; */
+            }
+
+            .keyboard-row button {
+                height: 3.5em;
+                max-width: 3em;
+                /* Grow to fill */
+                flex-grow: 1;
+                padding: 0;
+                margin: 0.1em;
+                text-align: center;
+                line-height: 1em;
+                text-transform: uppercase;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 1em;
+                background: rgb(49, 49, 49);
+                color: rgb(179, 179, 179);
+                font-weight: bold;
+                border: 2px solid rgb(73, 73, 73);
+            }
         </style>
 
         <script>
@@ -141,7 +253,7 @@
                             v-for="(letter, index) in guess" :key="letter + index.toString()">
                             {{ letter }}
                         </div>
-                        <div class="guess-letter" :class="score[index] + ' ' + (index === activeIndex ? 'active' : '')"
+                        <div class="guess-letter" :class="score[index] + ' ' + ((index+guess.length) === activeIndex ? 'active' : '')"
                             v-for="index in 5 - guess.length" :key="'blank-' + index.toString()">
                             &nbsp;
                         </div>
@@ -188,6 +300,17 @@
                         if (this.activeIndex < 0) {
                             this.activeIndex = 0;
                         }
+                        // Use only first five letters
+                        this.editingGuess = this.editingGuess.substr(0, 5);
+                        console.log(this.editingGuess);
+                        console.log(this.activeIndex);
+                    },
+
+                    resetState() {
+                        this.gameState.guesses = [];
+                        this.gameState.scores = [];
+                        this.gameState.guesses_remaining = 6;
+                        this.gameState.status = "IN_PROGRESS";
                     },
 
                     submitGuess() {
@@ -217,13 +340,13 @@
                     },
                 },
 
-                created() {
+                mounted() {
                     let self = this;
+
                     document.onkeydown = (e) => {
                         if (self.gameState.status !== "IN_PROGRESS") {
                             return;
                         }
-                        console.log(e.key);
                         // handle backspace:
                         if (e.key === "Backspace" || e.key === "Delete") {
                             self.updateLetter(self.activeIndex, " ");
@@ -266,6 +389,18 @@
                 },
                 template: `
                 <div>
+                    <div class="modal win-modal" :class="gameState.status == 'WON' ? 'visible' : ''">
+                        <b class="modal-title">You win!</b>
+                        <p>
+                            <button class="modal-action-button" @click="resetState()">Play again?</button>
+                        </p>
+                    </div>
+                    <div class="modal lose-modal" :class="gameState.status == 'LOST' ? 'visible' : ''">
+                        <b class="modal-title">The word was <code>{{gameState.answer}}</code></b>
+                        <p>
+                            <button class="modal-action-button" @click="resetState()">Play again?</button>
+                        </p>
+                    </div>
                     <div v-for="(guess, guessIndex) in gameState.guesses" :key="'guess' + guessIndex.toString()">
                         <GuessRow :guess="guess" :score="gameState.scores[guessIndex]" />
                     </div>
@@ -279,6 +414,30 @@
                             </div>
                         </div>
                     </div>
+                    <div class="keyboard">
+                        <div class="keyboard-row">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'qwertyuiop'" :key="letter">
+                                {{letter}}
+                            </button>
+                        </div>
+                        <div class="keyboard-row">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'asdfghjkl'" :key="letter">
+                                {{letter}}
+                            </button>
+                        </div>
+                        <div class="keyboard-row">
+                            <button @click="submitGuess">
+                                ⮕
+                            </button>
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'zxcvbnm'" :key="letter">
+                                {{letter}}
+                            </button>
+                            <button @click="updateLetter(activeIndex, ' ')">
+                                ⌫
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
                 `,
             };
@@ -289,7 +448,7 @@
                 },
                 template: `
                 <div class="game-container">
-                    <h1 align=center>Many Green Blocks</h1>
+                    <h1 align=center>Green Blocks</h1>
                     <GameBoard />
                 </div>`,
             };

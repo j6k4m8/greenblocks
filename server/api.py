@@ -44,7 +44,11 @@ class Score(str, Enum):
     NOT_A_WORD = "NOT_A_WORD"
 
 
-wordlist = Wordlist()
+# common5.txt in the same directory as this file
+wordlist = Wordlist(filename=os.path.join(os.path.dirname(__file__), "common5.txt"))
+all_valid_words = Wordlist(
+    filename=os.path.join(os.path.dirname(__file__), "wordlist.txt")
+)
 
 
 class Game:
@@ -92,7 +96,7 @@ class Game:
             return Score.OUT_OF_GUESSES
         if len(guess) != len(self._answer):
             return Score.INVALID_GUESS
-        if guess not in wordlist:
+        if guess not in all_valid_words:
             return Score.NOT_A_WORD
 
         self._guesses_remaining -= 1
@@ -283,17 +287,20 @@ class StatefulGameServer:
 
     def _game_endpoint(self, uuid: str):
         # if this is a GET, we just return the game state
+        game_state = self._get_game(uuid)
         if request.method == "GET":
-            game_state = self._game_state_store_factory().load_game(uuid)
             if game_state is None:
                 return jsonify({"error": "NOT_FOUND"})
             else:
+                # If the game is in progress, remove `answer`:
+                if game_state.get("status", None) == "IN_PROGRESS":
+                    game_state["answer"] = None
+
                 return jsonify(game_state)
 
         # get the guess from the request
         guess = request.json["guess"]
 
-        game_state = self._get_game(uuid)
         if game_state is None:
             game_state = self._create_game(uuid)
 
@@ -325,6 +332,9 @@ class StatefulGameServer:
         self._save_game(uuid, game_state)
 
         # Return the game state
+        # If the game is in progress, remove `answer`:
+        if game_state.get("status", None) == "IN_PROGRESS":
+            game_state["answer"] = None
         return jsonify(game_state)
 
     def _get_game(self, uuid: str):
@@ -346,7 +356,7 @@ class StatefulGameServer:
         game_state_store.save_game(uuid, state)
 
     def serve(self, debug=False):
-        self._app.run(debug=debug)
+        self._app.run(debug=debug, host="0.0.0.0")
 
 
 if __name__ == "__main__":

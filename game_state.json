@@ -1,0 +1,1 @@
+{"1234": {"answer": "kelly", "number_of_guesses": 6, "guesses_remaining": 0, "guesses": ["melon", "cells", "kelly"], "scores": [["INCORRECT_LETTER", "CORRECT", "CORRECT", "INCORRECT_LETTER", "INCORRECT_LETTER"], ["INCORRECT_LETTER", "CORRECT", "CORRECT", "CORRECT", "INCORRECT_LETTER"], ["CORRECT", "CORRECT", "CORRECT", "CORRECT", "CORRECT"]], "status": "WON"}}

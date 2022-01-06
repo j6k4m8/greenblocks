@@ -10,6 +10,11 @@
             async
             src="https://www.googletagmanager.com/gtag/js?id=G-4RCVMZSKW6"
         ></script>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag() {
@@ -228,9 +233,42 @@
                 font-weight: bold;
                 border: 2px solid rgb(73, 73, 73);
             }
+
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 100;
+            }
+
+            .loading-spinner {
+                width: 50px;
+                height: 50px;
+                border: 5px solid rgb(51, 116, 190);
+                border-top: 5px solid #333;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
         </style>
 
         <script>
+            let notifier = new Notyf();
+
             // Copies a string to the clipboard. Must be called from within an
             // event handler such as click. May return false if it failed, but
             // this is not always possible. Browser support for Chrome 43+,
@@ -320,6 +358,7 @@
                 },
                 data() {
                     return {
+                        loading: false,
                         gameState: {
                             guesses: [],
                             scores: [],
@@ -332,7 +371,6 @@
 
                 methods: {
                     updateLetter(index, letter) {
-                        console.log(this.activeIndex, index);
                         this.editingGuess =
                             this.editingGuess.substr(0, index) +
                             letter +
@@ -352,15 +390,13 @@
                         }
                         // Use only first five letters
                         this.editingGuess = this.editingGuess.substr(0, 5);
-                        console.log(this.editingGuess);
-                        console.log(this.activeIndex);
                     },
 
                     resetState() {
                         this.gameState.guesses = [];
                         this.gameState.scores = [];
                         this.gameState.guesses_remaining = 6;
-                        this.gameState.status = "IN_PROGRESS";
+                        this.gameState.game_status = "IN_PROGRESS";
                     },
 
                     submitGuess() {
@@ -368,6 +404,7 @@
                             return;
                         }
 
+                        this.loading = true;
                         fetch(`/game/${getUUID()}`, {
                             method: "POST",
                             headers: {
@@ -377,10 +414,18 @@
                                 guess: this.editingGuess,
                             }),
                         })
-                            .then((response) => response.json())
+                            .then((response) => {
+                                this.loading = false;
+                                return response.json();
+                            })
                             .then((data) => {
                                 if (data.error) {
                                     console.error(data.error);
+                                    notifier.error(
+                                        {
+                                            NOT_A_WORD: "Not a valid word!",
+                                        }[data.error]
+                                    );
                                     return;
                                 }
                                 this.gameState = data;
@@ -398,7 +443,7 @@
                     let self = this;
 
                     document.onkeydown = (e) => {
-                        if (self.gameState.status !== "IN_PROGRESS") {
+                        if (self.gameState.game_status !== "IN_PROGRESS") {
                             return;
                         }
                         // handle backspace:
@@ -418,10 +463,11 @@
                             self.submitGuess();
                         }
                     };
+                    this.loading = true;
                     fetch(`/game/${getUUID()}`)
                         .then((res) => res.json())
                         .then((data) => {
-                            console.log(data);
+                            this.loading = false;
                             // If there is an 'error' key in the response,
                             // then we have an error. Show it; don't update
                             // the game state.
@@ -431,7 +477,7 @@
                                         guesses: [],
                                         scores: [],
                                         guesses_remaining: 6,
-                                        status: "IN_PROGRESS",
+                                        game_status: "IN_PROGRESS",
                                     };
                                 } else {
                                     console.error(data.error);
@@ -466,7 +512,10 @@
 
                 template: `
                 <div>
-                    <div class="modal win-modal" :class="gameState.status == 'WON' ? 'visible' : ''">
+                    <div class="loading-overlay" v-if="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div class="modal win-modal" :class="gameState.game_status == 'WON' ? 'visible' : ''">
                         <b class="modal-title">You win!</b>
                         <p>
                             <textarea @click="copyScoreToClipboard()" style="font-family: monospace; text-align: center; background: transparent; border: none; font-size: 1.5em" cols=20 rows=7>{{scoremoji}}</textarea>
@@ -475,7 +524,7 @@
                             <button class="modal-action-button" @click="resetState()">Play again?</button>
                         </p>
                     </div>
-                    <div class="modal lose-modal" :class="gameState.status == 'LOST' ? 'visible' : ''">
+                    <div class="modal lose-modal" :class="gameState.game_status == 'LOST' ? 'visible' : ''">
                         <b class="modal-title">The word was <code>{{gameState.answer}}</code></b>
                         <p>
                             <button class="modal-action-button" @click="resetState()">Play again?</button>
@@ -484,7 +533,7 @@
                     <div v-for="(guess, guessIndex) in gameState.guesses" :key="'guess' + guessIndex.toString()">
                         <GuessRow :guess="guess" :score="gameState.scores[guessIndex]" />
                     </div>
-                    <div v-if="this.gameState.status === 'IN_PROGRESS'">
+                    <div v-if="this.gameState.game_status === 'IN_PROGRESS'">
                         <div>
                             <GuessRow :guess="editingGuess" :score="['','','','','']" :activeIndex="activeIndex" />
                         </div>
@@ -506,13 +555,13 @@
                             </button>
                         </div>
                         <div class="keyboard-row">
-                            <button @click="submitGuess">
+                            <button style="background: #555" @click="submitGuess">
                                 ⮕
                             </button>
                             <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'zxcvbnm'" :key="letter">
                                 {{letter}}
                             </button>
-                            <button @click="updateLetter(activeIndex, ' ')">
+                            <button style="background: #555" @click="updateLetter(activeIndex, ' ')">
                                 ⌫
                             </button>
                         </div>

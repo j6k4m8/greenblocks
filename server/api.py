@@ -10,6 +10,7 @@ import json
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import boto3
+from boto3.dynamodb.conditions import Key
 
 
 class Wordlist:
@@ -147,7 +148,7 @@ class JSONFileGameStatePersister(GameStatePersister):
         print("Loading game state", uuid)
         games = self._get_contents()
         game = games.get(uuid, None)
-        if game and game.get("status", "None") == "IN_PROGRESS":
+        if game and game.get("game_status", "None") == "IN_PROGRESS":
             return game
 
 
@@ -173,18 +174,18 @@ class DynamoDBGameStatePersister(GameStatePersister):
         # needed. (There is no provisioned read/write capacity.)
 
         # Primary key is "uuid"
-        # Sort key is "status"
+        # Sort key is "game_status"
 
         dynamodb = boto3.resource("dynamodb")
         table = dynamodb.create_table(
             TableName=self._dynamodb_table_name,
             KeySchema=[
                 {"AttributeName": "uuid", "KeyType": "HASH"},
-                {"AttributeName": "status", "KeyType": "RANGE"},
+                {"AttributeName": "game_status", "KeyType": "RANGE"},
             ],
             AttributeDefinitions=[
                 {"AttributeName": "uuid", "AttributeType": "S"},
-                {"AttributeName": "status", "AttributeType": "S"},
+                {"AttributeName": "game_status", "AttributeType": "S"},
             ],
             BillingMode="PAY_PER_REQUEST",
         )
@@ -197,22 +198,31 @@ class DynamoDBGameStatePersister(GameStatePersister):
     def save_game(self, uuid: str, state: dict):
         dynamodb = boto3.resource("dynamodb")
         table = dynamodb.Table(self._dynamodb_table_name)
+        print(state)
 
+        # Get the current contents:
+        response = table.get_item(Key={"uuid": uuid, "game_status": "IN_PROGRESS"})
+        if "Item" in response:
+            # Delete the old item:
+            table.delete_item(Key={"uuid": uuid, "game_status": "IN_PROGRESS"})
+        # Write the new item:
         table.put_item(
             Item={
                 "uuid": uuid,
-                "status": "IN_PROGRESS",
-                "game_state": json.dumps(state, default=str),
+                "game_status": state.get("game_status", "IN_PROGRESS"),
+                "state": json.dumps(state),
             }
         )
 
     def load_game(self, uuid: str):
         dynamodb = boto3.resource("dynamodb")
         table = dynamodb.Table(self._dynamodb_table_name)
-        response = table.get_item(Key={"uuid": uuid})
+        # Only get IN_PROGRESS games:
+        response = table.get_item(Key={"uuid": uuid, "game_status": "IN_PROGRESS"})
         if "Item" in response:
-            return json.loads(response["Item"]["game_state"])
-
+            state = response["Item"]["state"]
+            print(state)
+            return json.loads(state)
         return None
 
 
@@ -263,7 +273,7 @@ class StatefulGameServer:
 
     The database is a DynamoDB table. The table has a single primary key,
     "uuid", which is the UUID of the game. The table has two attributes:
-    * "status": the status of the game, (in progress, etc)
+    * "game_status": the status of the game, (in progress, etc)
     * "game_state": the state of the game, encoded as stringified JSON.
 
     """
@@ -293,7 +303,7 @@ class StatefulGameServer:
                 return jsonify({"error": "NOT_FOUND"})
             else:
                 # If the game is in progress, remove `answer`:
-                if game_state.get("status", None) == "IN_PROGRESS":
+                if game_state.get("game_status", None) == "IN_PROGRESS":
                     game_state["answer"] = None
 
                 return jsonify(game_state)
@@ -305,6 +315,7 @@ class StatefulGameServer:
             game_state = self._create_game(uuid)
 
         # score the guess
+        print(game_state)
         game = Game.from_game_state(game_state)
         score = game.guess(guess)
 
@@ -318,22 +329,22 @@ class StatefulGameServer:
 
         # if you guessed correctly, the game is over
         if game.get_answer() == guess:
-            game_state["status"] = "WON"
+            game_state["game_status"] = "WON"
             game_state["guesses_remaining"] = 0
         # if you guessed incorrectly, and you have no guesses left, the game is over
         elif game_state["guesses_remaining"] == 0:
-            game_state["status"] = "LOST"
+            game_state["game_status"] = "LOST"
             game_state["guesses_remaining"] = 0
         # otherwise, the game is still in progress
         else:
-            game_state["status"] = "IN_PROGRESS"
+            game_state["game_status"] = "IN_PROGRESS"
 
         # Save the game state to the database
         self._save_game(uuid, game_state)
 
         # Return the game state
         # If the game is in progress, remove `answer`:
-        if game_state.get("status", None) == "IN_PROGRESS":
+        if game_state.get("game_status", None) == "IN_PROGRESS":
             game_state["answer"] = None
         return jsonify(game_state)
 
@@ -343,7 +354,7 @@ class StatefulGameServer:
 
     def _create_game(self, uuid: str):
         # Create a new game
-        game = Game()
+        game = Game(answer=wordlist.get_random_word(length=5))
 
         # Save the game state to the database
         state = game.to_game_state()
@@ -361,7 +372,7 @@ class StatefulGameServer:
 
 if __name__ == "__main__":
     stateful_game_server = StatefulGameServer(
-        lambda: JSONFileGameStatePersister()
-        # lambda: DynamoDBGameStatePersister("wordgame-state")
+        # lambda: JSONFileGameStatePersister()
+        lambda: DynamoDBGameStatePersister("wordgame-state")
     )
     stateful_game_server.serve(True)

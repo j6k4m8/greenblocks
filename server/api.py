@@ -4,6 +4,14 @@ import random
 from functools import cache
 
 
+import abc
+import os
+import json
+from flask import Flask, request, jsonify, render_template
+from flask_cors import CORS
+import boto3
+
+
 class Wordlist:
     def __init__(self, filename: str = "/usr/share/dict/words"):
         self.filename = filename
@@ -100,14 +108,6 @@ class Game:
             )
             for guess_letter, answer_letter in zip(guess, self._answer)
         ]
-
-
-import abc
-import os
-import json
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import boto3
 
 
 class GameStatePersister(abc.ABC):
@@ -210,6 +210,20 @@ class DynamoDBGameStatePersister(GameStatePersister):
         return None
 
 
+class CustomFlask(Flask):
+    jinja_options = Flask.jinja_options.copy()
+    jinja_options.update(
+        dict(
+            block_start_string="<%",
+            block_end_string="%>",
+            variable_start_string="%%",
+            variable_end_string="%%",
+            comment_start_string="<#",
+            comment_end_string="#>",
+        )
+    )
+
+
 class StatefulGameServer:
     """
     This is a flask server that lets a player self-identify and play a game.
@@ -249,7 +263,7 @@ class StatefulGameServer:
     """
 
     def __init__(self, game_state_store_factory: Callable[[], GameStatePersister]):
-        self._app = Flask(__name__)
+        self._app = CustomFlask(__name__)
         CORS(self._app)
         self._game_state_store_factory = game_state_store_factory
 
@@ -259,6 +273,11 @@ class StatefulGameServer:
             self._game_endpoint,
             methods=["POST"],
         )
+
+        self._app.add_url_rule("/", "index", self._index_endpoint, methods=["GET"])
+
+    def _index_endpoint(self):
+        return render_template("index.html")
 
     def _game_endpoint(self, uuid: str):
         # get the guess from the request
@@ -310,4 +329,4 @@ if __name__ == "__main__":
         lambda: JSONFileGameStatePersister()
         # lambda: DynamoDBGameStatePersister("wordgame-state")
     )
-    stateful_game_server.serve()
+    stateful_game_server.serve(True)

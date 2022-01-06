@@ -8,15 +8,64 @@
         <script src="https://unpkg.com/vue"></script>
     </head>
     <body>
-        <div id="app">hi</div>
+        <div id="app"></div>
+
+        <footer>
+            <small>
+                <a
+                    class="footer-github-link"
+                    href="https://github.com/j6k4m8/manygreenblocks"
+                    target="_blank"
+                >
+                    This game is open-source on GitHub
+                </a>
+                <a
+                    class="footer-github-link"
+                    href="https://twitter.com/j6m8"
+                    target="_blank"
+                >
+                    I'm @j6m8 on Twitter
+                </a>
+            </small>
+        </footer>
 
         <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }
+
+            footer {
+                /* stick to the bottom */
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                /* Pad the bottom to the footer's height */
+                padding-bottom: 50px;
+                /* Pad the top to the footer's height */
+                padding-top: 50px;
+                text-align: center;
+            }
+            footer .footer-github-link {
+                color: #333;
+                font-weight: bold;
+                /* Make things slightly buttonier */
+                padding: 5px;
+                border: 1px solid #333;
+                border-radius: 5px;
+                /* Make things slightly buttonier */
+                text-decoration: none;
+                /* linky */
+                cursor: pointer;
+                margin: 0 5px;
+            }
+            footer .footer-github-link:hover {
+                color: #333;
+                background-color: #efefef;
+            }
             .game-container {
                 text-align: center;
                 margin: auto;
                 max-width: 800px;
-
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             }
             .guess-row {
                 /* A row of five letters */
@@ -192,11 +241,7 @@
                             self.submitGuess();
                         }
                     };
-                    fetch("/game/1234", {
-                        // method: "POST",
-                        // headers: { "content-type": "application/json" },
-                        // body: JSON.stringify({ guess: "cream" }),
-                    })
+                    fetch("/game/1234")
                         .then((res) => res.json())
                         .then((data) => {
                             console.log(data);

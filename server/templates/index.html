@@ -10,29 +10,230 @@
     <body>
         <div id="app">hi</div>
 
+        <style>
+            .game-container {
+                text-align: center;
+                margin: auto;
+                max-width: 800px;
+
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .guess-row {
+                /* A row of five letters */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: center;
+                margin: 0;
+                padding: 0;
+            }
+
+            .guess-letter {
+                /* A single letter. Black outline, bold letter. */
+                font-size: 2em;
+                font-weight: bold;
+                color: black;
+                border: 5px solid black;
+                height: 2em;
+                width: 2em;
+                padding: 0;
+                margin: 0.1em;
+                text-align: center;
+                /* vertical align */
+                line-height: 2em;
+                text-transform: uppercase;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            }
+            .guess-letter.active {
+                /* some background glow */
+                box-shadow: cyan 0px 0px 20px 0px;
+            }
+            .guess-letter.CORRECT {
+                /* A correct guess */
+                background-color: #53dd53;
+                border: 5px solid forestgreen;
+                color: rgb(11, 70, 11);
+            }
+            .guess-letter.INCORRECT_LETTER {
+                /* An incorrect guess */
+                background-color: #7e7e7e;
+                border: 5px solid rgb(49, 49, 49);
+                color: rgb(27, 27, 27);
+            }
+            .guess-letter.WRONG_LOCATION {
+                /* A wrong guess */
+                background-color: #a58734;
+                border: 5px solid rgb(88, 60, 17);
+                color: rgb(27, 27, 27);
+            }
+        </style>
+
         <script>
+            const GuessRow = {
+                name: "GuessRow",
+                props: {
+                    guess: {
+                        type: String,
+                        required: true,
+                    },
+                    score: {
+                        type: Array,
+                        required: false,
+                    },
+                    activeIndex: {
+                        type: Number,
+                        required: false,
+                    },
+                },
+                template: `
+                    <div class="guess-row">
+                        <div class="guess-letter" :class="score[index] + ' ' + (index === activeIndex ? 'active' : '')"
+                            v-for="(letter, index) in guess" :key="letter + index.toString()">
+                            {{ letter }}
+                        </div>
+                        <div class="guess-letter" :class="score[index] + ' ' + (index === activeIndex ? 'active' : '')"
+                            v-for="index in 5 - guess.length" :key="'blank-' + index.toString()">
+                            &nbsp;
+                        </div>
+                    </div>
+                `,
+            };
             const GameBoard = {
+                constructor() {
+                    this.created = this.created.bind(this);
+                },
                 name: "GameBoard",
+                components: {
+                    GuessRow,
+                },
                 data() {
                     return {
                         gameState: {
-                            guesses: [["truss"]],
-                            scores: [
-                                [
-                                    "INCORRECT_LETTER",
-                                    "INCORRECT_LETTER",
-                                    "CORRECT",
-                                    "INCORRECT_LETTER",
-                                    "CORRECT",
-                                ],
-                            ],
+                            guesses: [],
+                            scores: [],
+                            guesses_remaining: 6,
                         },
+                        editingGuess: "",
+                        activeIndex: 0,
                     };
+                },
+
+                methods: {
+                    updateLetter(index, letter) {
+                        console.log(this.activeIndex, index);
+                        this.editingGuess =
+                            this.editingGuess.substr(0, index) +
+                            letter +
+                            this.editingGuess.substr(index + 1);
+
+                        if (letter === " ") {
+                            this.activeIndex = index - 1;
+                        } else {
+                            this.activeIndex = index + 1;
+                        }
+
+                        if (this.activeIndex >= 5) {
+                            this.activeIndex = 4;
+                        }
+                        if (this.activeIndex < 0) {
+                            this.activeIndex = 0;
+                        }
+                    },
+
+                    submitGuess() {
+                        if (this.editingGuess.length !== 5) {
+                            return;
+                        }
+
+                        fetch("/game/1234", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                guess: this.editingGuess,
+                            }),
+                        })
+                            .then((response) => response.json())
+                            .then((data) => {
+                                if (data.error) {
+                                    console.error(data.error);
+                                    return;
+                                }
+                                this.gameState = data;
+                                this.editingGuess = "";
+                                this.activeIndex = 0;
+                            });
+                    },
+                },
+
+                created() {
+                    let self = this;
+                    document.onkeydown = (e) => {
+                        if (self.gameState.status !== "IN_PROGRESS") {
+                            return;
+                        }
+                        console.log(e.key);
+                        // handle backspace:
+                        if (e.key === "Backspace" || e.key === "Delete") {
+                            self.updateLetter(self.activeIndex, " ");
+                        } else if (
+                            e.key.length === 1 &&
+                            e.key >= "a" &&
+                            e.key <= "z"
+                        ) {
+                            self.updateLetter(self.activeIndex, e.key);
+                        } else if (e.key === "ArrowLeft") {
+                            self.activeIndex--;
+                        } else if (e.key === "ArrowRight") {
+                            self.activeIndex++;
+                        } else if (e.key === "Enter") {
+                            self.submitGuess();
+                        }
+                    };
+                    fetch("/game/1234", {
+                        // method: "POST",
+                        // headers: { "content-type": "application/json" },
+                        // body: JSON.stringify({ guess: "cream" }),
+                    })
+                        .then((res) => res.json())
+                        .then((data) => {
+                            console.log(data);
+                            // If there is an 'error' key in the response,
+                            // then we have an error. Show it; don't update
+                            // the game state.
+                            if (data.error) {
+                                if (data.error === "NOT_FOUND") {
+                                    this.gameState = {
+                                        guesses: [],
+                                        scores: [],
+                                        guesses_remaining: 6,
+                                        status: "IN_PROGRESS",
+                                    };
+                                } else {
+                                    console.error(data.error);
+                                }
+                                return;
+                            }
+                            this.gameState = data;
+                        });
                 },
                 template: `
                 <div>
-                    <div v-for="guess in gameState.guesses">
-                        {{guess}}
+                    <div v-for="(guess, guessIndex) in gameState.guesses" :key="'guess' + guessIndex.toString()">
+                        <GuessRow :guess="guess" :score="gameState.scores[guessIndex]" />
+                    </div>
+                    <div v-if="this.gameState.status === 'IN_PROGRESS'">
+                        <div>
+                            <GuessRow :guess="editingGuess" :score="['','','','','']" :activeIndex="activeIndex" />
+                        </div>
+                        <div v-if="gameState.guesses_remaining - 1 > 0">
+                            <div v-for="remaining in (gameState.guesses_remaining - 1)">
+                                <GuessRow guess="     " :score="['','','','','']" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 `,
             };
@@ -42,8 +243,8 @@
                     GameBoard,
                 },
                 template: `
-                <div>
-                    <h1>Many Green Blocks</h1>
+                <div class="game-container">
+                    <h1 align=center>Many Green Blocks</h1>
                     <GameBoard />
                 </div>`,
             };

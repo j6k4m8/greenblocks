@@ -142,7 +142,9 @@ class JSONFileGameStatePersister(GameStatePersister):
     def load_game(self, uuid: str):
         print("Loading game state", uuid)
         games = self._get_contents()
-        return games.get(uuid, None)
+        game = games.get(uuid, None)
+        if game and game.get("status", "None") == "IN_PROGRESS":
+            return game
 
 
 class DynamoDBGameStatePersister(GameStatePersister):
@@ -271,7 +273,7 @@ class StatefulGameServer:
             "/game/<uuid>",
             "game",
             self._game_endpoint,
-            methods=["POST"],
+            methods=["POST", "GET"],
         )
 
         self._app.add_url_rule("/", "index", self._index_endpoint, methods=["GET"])
@@ -280,6 +282,14 @@ class StatefulGameServer:
         return render_template("index.html")
 
     def _game_endpoint(self, uuid: str):
+        # if this is a GET, we just return the game state
+        if request.method == "GET":
+            game_state = self._game_state_store_factory().load_game(uuid)
+            if game_state is None:
+                return jsonify({"error": "NOT_FOUND"})
+            else:
+                return jsonify(game_state)
+
         # get the guess from the request
         guess = request.json["guess"]
 
@@ -291,10 +301,25 @@ class StatefulGameServer:
         game = Game.from_game_state(game_state)
         score = game.guess(guess)
 
+        if isinstance(score, str):
+            return jsonify({"error": score})
+
         # update the game state
         game_state["guesses"].append(guess)
         game_state["scores"].append(score)
         game_state["guesses_remaining"] -= 1
+
+        # if you guessed correctly, the game is over
+        if game.get_answer() == guess:
+            game_state["status"] = "WON"
+            game_state["guesses_remaining"] = 0
+        # if you guessed incorrectly, and you have no guesses left, the game is over
+        elif game_state["guesses_remaining"] == 0:
+            game_state["status"] = "LOST"
+            game_state["guesses_remaining"] = 0
+        # otherwise, the game is still in progress
+        else:
+            game_state["status"] = "IN_PROGRESS"
 
         # Save the game state to the database
         self._save_game(uuid, game_state)

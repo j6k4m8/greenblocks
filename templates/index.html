@@ -383,7 +383,6 @@
 
                 methods: {
                     setActiveIndex(index) {
-                        console.log(index);
                         this.activeIndex = index;
                     },
                     updateLetter(index, letter) {
@@ -457,6 +456,42 @@
                             });
                     },
 
+                    getColorForKey(letter) {
+                        // Loop through each guess and score.
+                        // If this letter is INCORRECT_LETTER, return grey.
+                        // If this letter is WRONG_LOCATION, return orange.
+                        // If this letter is ever CORRECT, return green.
+                        let best = "#666";
+                        for (
+                            let i = 0;
+                            i < this.gameState.guesses.length;
+                            i++
+                        ) {
+                            for (
+                                let j = 0;
+                                j < this.gameState.guesses[i].length;
+                                j++
+                            ) {
+                                if (this.gameState.guesses[i][j] === letter) {
+                                    if (
+                                        this.gameState.scores[i][j] ===
+                                        "CORRECT"
+                                    ) {
+                                        return "forestgreen";
+                                    } else if (
+                                        this.gameState.scores[i][j] ===
+                                        "WRONG_LOCATION"
+                                    ) {
+                                        best = "#a58734";
+                                    } else {
+                                        return "#999";
+                                    }
+                                }
+                            }
+                        }
+                        return best;
+                    },
+
                     copyScoreToClipboard() {
                         copyToClipboard(this.scoremoji);
                     },
@@ -511,10 +546,8 @@
                         });
                 },
 
-                // computed:
                 computed: {
                     scoremoji() {
-                        // Replace "CORRECT" with a green box:
                         function letterToEmoji(letter) {
                             if (letter === "CORRECT") {
                                 return "🟩";
@@ -568,12 +601,12 @@
                     </div>
                     <div class="keyboard">
                         <div class="keyboard-row">
-                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'qwertyuiop'" :key="letter">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'qwertyuiop'" :key="letter" :style="'background-color: ' + getColorForKey(letter)">
                                 {{letter}}
                             </button>
                         </div>
                         <div class="keyboard-row">
-                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'asdfghjkl'" :key="letter">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'asdfghjkl'" :key="letter" :style="'background-color: ' + getColorForKey(letter)">
                                 {{letter}}
                             </button>
                         </div>
@@ -581,7 +614,7 @@
                             <button style="background: #555" @click="submitGuess">
                                 ⮕
                             </button>
-                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'zxcvbnm'" :key="letter">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'zxcvbnm'" :key="letter" :style="'background-color: ' + getColorForKey(letter)">
                                 {{letter}}
                             </button>
                             <button style="background: #555" @click="updateLetter(activeIndex, ' ')">

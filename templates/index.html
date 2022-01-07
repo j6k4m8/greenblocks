@@ -62,7 +62,7 @@
             </small>
         </footer>
 
-        <style>
+        <style type="text/less">
             body {
                 font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
                 background: #2a2a2a;
@@ -78,23 +78,23 @@
 
             footer {
                 text-align: center;
-            }
-            footer .footer-github-link {
-                color: rgb(179, 179, 179);
-                font-weight: bold;
-                /* Make things slightly buttonier */
-                padding: 5px 10px;
-                border: 1px solid rgb(173, 173, 173);
-                border-radius: 5px;
-                /* Make things slightly buttonier */
-                text-decoration: none;
-                /* linky */
-                cursor: pointer;
-                margin: 5px;
-            }
-            footer .footer-github-link:hover {
-                color: #333;
-                background-color: #efefef;
+                .footer-github-link {
+                    color: rgb(179, 179, 179);
+                    font-weight: bold;
+                    /* Make things slightly buttonier */
+                    padding: 5px 10px;
+                    border: 1px solid rgb(173, 173, 173);
+                    border-radius: 5px;
+                    /* Make things slightly buttonier */
+                    text-decoration: none;
+                    /* linky */
+                    cursor: pointer;
+                    margin: 5px;
+                }
+                .footer-github-link:hover {
+                    color: #333;
+                    background-color: #efefef;
+                }
             }
             .game-container {
                 text-align: center;
@@ -131,28 +131,29 @@
                 line-height: 2em;
                 text-transform: uppercase;
                 font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            }
-            .guess-letter.active {
-                /* some background glow */
-                box-shadow: cyan 0px 0px 20px 0px;
-            }
-            .guess-letter.CORRECT {
-                /* A correct guess */
-                background-color: #53dd53;
-                border: 5px solid forestgreen;
-                color: rgb(11, 70, 11);
-            }
-            .guess-letter.INCORRECT_LETTER {
-                /* An incorrect guess */
-                background-color: #7e7e7e;
-                border: 5px solid rgb(49, 49, 49);
-                color: rgb(27, 27, 27);
-            }
-            .guess-letter.WRONG_LOCATION {
-                /* A wrong guess */
-                background-color: #a58734;
-                border: 5px solid rgb(88, 60, 17);
-                color: rgb(27, 27, 27);
+
+                &.active {
+                    /* some background glow */
+                    box-shadow: cyan 0px 0px 20px 0px;
+                }
+                &.CORRECT {
+                    /* A correct guess */
+                    background-color: #53dd53;
+                    border: 5px solid forestgreen;
+                    color: rgb(11, 70, 11);
+                }
+                &.INCORRECT_LETTER {
+                    /* An incorrect guess */
+                    background-color: #7e7e7e;
+                    border: 5px solid rgb(49, 49, 49);
+                    color: rgb(27, 27, 27);
+                }
+                &.WRONG_LOCATION {
+                    /* A wrong guess */
+                    background-color: #a58734;
+                    border: 5px solid rgb(88, 60, 17);
+                    color: rgb(27, 27, 27);
+                }
             }
 
             /* Modals */
@@ -169,38 +170,38 @@
                 display: none;
                 pointer-events: none;
                 transition: opacity 0.15s ease-in-out;
-            }
-            .modal.visible {
-                display: flex;
-                opacity: 1;
-                pointer-events: all;
-            }
-            .win-modal {
-                /* A modal for when the player wins */
-                background-color: rgba(38, 87, 5, 0.884);
-                border: 10px solid #003f00;
-            }
-            .modal-title {
-                font-size: 3em;
-                font-weight: bolder;
-            }
+                &.visible {
+                    display: flex;
+                    opacity: 1;
+                    pointer-events: all;
+                }
+                &.win-modal {
+                    /* A modal for when the player wins */
+                    background-color: rgba(38, 87, 5, 0.884);
+                    border: 10px solid #003f00;
+                }
+                &.modal-title {
+                    font-size: 3em;
+                    font-weight: bolder;
+                }
 
-            .modal-action-button {
-                /* A button to close the modal */
-                font-size: 1.5em;
-                font-weight: bold;
-                padding: 0.5em 1em;
-                border: 4px solid #003f00;
-                border-radius: 1px;
-                text-decoration: none;
-                cursor: pointer;
-                margin: 0 5px;
-            }
+                &.modal-action-button {
+                    /* A button to close the modal */
+                    font-size: 1.5em;
+                    font-weight: bold;
+                    padding: 0.5em 1em;
+                    border: 4px solid #003f00;
+                    border-radius: 1px;
+                    text-decoration: none;
+                    cursor: pointer;
+                    margin: 0 5px;
+                }
 
-            .lose-modal {
-                /* A modal for when the player loses */
-                background-color: rgba(44, 44, 44, 0.884);
-                border: 10px solid #181818;
+                &.lose-modal {
+                    /* A modal for when the player loses */
+                    background-color: rgba(44, 44, 44, 0.884);
+                    border: 10px solid #181818;
+                }
             }
 
             .keyboard {
@@ -211,34 +212,34 @@
                 max-width: 800px;
                 padding-top: 30px;
                 text-align: center;
-            }
 
-            .keyboard-row {
-                display: flex;
-                flex-direction: row;
-                justify-content: center;
-                align-items: center;
-                margin: 0;
-                padding: 0;
-                /* flex-wrap: wrap; */
-            }
-
-            .keyboard-row button {
-                height: 3.5em;
-                max-width: 3em;
-                /* Grow to fill */
-                flex-grow: 1;
-                padding: 0;
-                margin: 0.1em;
-                text-align: center;
-                line-height: 1em;
-                text-transform: uppercase;
-                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-                font-size: 1em;
-                background: rgb(49, 49, 49);
-                color: rgb(179, 179, 179);
-                font-weight: bold;
-                border: 2px solid rgb(73, 73, 73);
+                .keyboard-row {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    /* flex-wrap: wrap; */
+                    button {
+                        height: 3.5em;
+                        max-width: 3em;
+                        /* Grow to fill */
+                        flex-grow: 1;
+                        padding: 0;
+                        margin: 0.1em;
+                        text-align: center;
+                        line-height: 1em;
+                        text-transform: uppercase;
+                        font-family: "Segoe UI", Tahoma, Geneva, Verdana,
+                            sans-serif;
+                        font-size: 1em;
+                        background: rgb(49, 49, 49);
+                        color: rgb(179, 179, 179);
+                        font-weight: bold;
+                        border: 2px solid rgb(73, 73, 73);
+                    }
+                }
             }
 
             .loading-overlay {
@@ -273,6 +274,7 @@
             }
         </style>
 
+        <script src="https://cdn.jsdelivr.net/npm/less@4.1.1"></script>
         <script>
             let notifier = new Notyf();
 

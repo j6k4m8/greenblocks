@@ -1,0 +1,38 @@
+name: Deploy Production Website
+
+on:
+  # Trigger the workflow on push,
+  # but only for the master branch
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install virtualenv
+        virtualenv venv_zappa
+        source venv_zappa/bin/activate
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install zappa
+    - name: Deploy Zappa
+      run: |
+        echo '${{ secrets.ZAPPA_CONFIG }}' > zappa_settings.json
+        source venv_zappa/bin/activate
+        zappa update production
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: us-east-1

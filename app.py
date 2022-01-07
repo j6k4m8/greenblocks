@@ -1,6 +1,7 @@
 from typing import Any, Callable
 from enum import Enum
 import random
+import datetime
 from functools import cache
 
 
@@ -10,7 +11,6 @@ import json
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import boto3
-from boto3.dynamodb.conditions import Key
 
 
 class Wordlist:
@@ -211,6 +211,7 @@ class DynamoDBGameStatePersister(GameStatePersister):
                 "uuid": uuid,
                 "game_status": state.get("game_status", "IN_PROGRESS"),
                 "state": json.dumps(state),
+                "last_updated": datetime.datetime.now().isoformat(),
             }
         )
 

@@ -29,37 +29,27 @@
         <div id="app"></div>
 
         <footer>
-            <br />
-            <small
-                style="
-                    justify-content: center;
-                    align-items: center;
-                    margin: 0;
-                    padding: 0;
-                "
+            <a
+                class="footer-link"
+                href="https://twitter.com/j6m8"
+                target="_blank"
             >
-                <a
-                    class="footer-github-link"
-                    href="https://twitter.com/j6m8"
-                    target="_blank"
-                >
-                    @j6m8
-                </a>
-                <a
-                    class="footer-github-link"
-                    href="https://github.com/j6k4m8/manygreenblocks"
-                    target="_blank"
-                >
-                    Source Code on GitHub
-                </a>
-                <a
-                    class="footer-github-link"
-                    href="https://www.powerlanguage.co.uk/wordle/"
-                    target="_blank"
-                >
-                    Original Game
-                </a>
-            </small>
+                @j6m8
+            </a>
+            <a
+                class="footer-link"
+                href="https://github.com/j6k4m8/manygreenblocks"
+                target="_blank"
+            >
+                Source Code on GitHub
+            </a>
+            <a
+                class="footer-link"
+                href="https://www.powerlanguage.co.uk/wordle/"
+                target="_blank"
+            >
+                Original Game
+            </a>
         </footer>
 
         <style type="text/less">
@@ -78,18 +68,28 @@
 
             footer {
                 text-align: center;
-                .footer-github-link {
+                /* Don't show on media 750px or shorter */
+                display: none;
+                @media (min-height: 750px) {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                .footer-link {
                     color: rgb(179, 179, 179);
                     font-weight: bold;
                     /* Make things slightly buttonier */
-                    padding: 5px 10px;
+                    padding: 2px 5px;
                     border: 1px solid rgb(173, 173, 173);
                     border-radius: 5px;
                     /* Make things slightly buttonier */
                     text-decoration: none;
                     /* linky */
                     cursor: pointer;
-                    margin: 5px;
+                    margin: 1px 5px;
                 }
                 .footer-github-link:hover {
                     color: #333;
@@ -101,6 +101,8 @@
                 max-width: 800px;
                 width: 100%;
                 margin: auto;
+                max-height: calc(100vh - 12em);
+                overflow: scroll;
             }
             .guess-row {
                 /* A row of five letters */
@@ -124,6 +126,7 @@
                 border: 5px solid #666666;
                 height: 2em;
                 width: 2em;
+                max-height: 19vw;
                 padding: 0;
                 margin: 0.1em;
                 text-align: center;
@@ -210,7 +213,7 @@
                 bottom: 0;
                 width: 100%;
                 max-width: 800px;
-                padding-top: 30px;
+                padding-top: 20px;
                 text-align: center;
 
                 .keyboard-row {
@@ -635,7 +638,7 @@
                 },
                 template: `
                 <div class="game-container">
-                    <h1 align=center>Green Blocks</h1>
+                    <h1 align=center style="font-size:1em">Green Blocks</h1>
                     <GameBoard />
                 </div>`,
             };

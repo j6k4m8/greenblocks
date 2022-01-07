@@ -139,7 +139,6 @@ color
 track
 least
 trade
-david
 green
 close
 drive
@@ -167,8 +166,6 @@ often
 watch
 deals
 words
-linux
-james
 heart
 error
 clear
@@ -187,7 +184,6 @@ death
 speed
 brand
 stuff
-japan
 doing
 loans
 shoes
@@ -219,7 +215,6 @@ ideas
 allow
 homes
 super
-asian
 cause
 focus
 rooms
@@ -229,7 +224,6 @@ brown
 forms
 glass
 happy
-smith
 thank
 prior
 sport
@@ -238,11 +232,8 @@ round
 built
 blood
 earth
-nokia
-italy
 basis
 award
-peter
 extra
 rated
 quite
@@ -305,7 +296,6 @@ royal
 clean
 bible
 suite
-vegas
 piece
 sheet
 seven
@@ -331,7 +321,6 @@ count
 claim
 patch
 alone
-jones
 saint
 drugs
 joint
@@ -368,7 +357,6 @@ chain
 moved
 reach
 sorry
-gamma
 truth
 films
 owned

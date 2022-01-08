@@ -319,8 +319,8 @@ class CustomFlask(Flask):
     )
 
 
-# _game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
-_game_state_store_factory = lambda: JSONFileGameStatePersister()
+_game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
+# _game_state_store_factory = lambda: JSONFileGameStatePersister()
 
 app = CustomFlask(__name__)
 CORS(app)

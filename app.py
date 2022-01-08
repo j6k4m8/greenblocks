@@ -1,3 +1,4 @@
+from operator import le
 from typing import Any, Callable
 from enum import Enum
 import random
@@ -65,7 +66,7 @@ class Game:
         self._guesses_remaining = guesses_remaining or number_of_guesses
         self._guesses = guesses or []
         self._scores = scores or []
-        self._answer = answer or wordlist.get_random_word(length=5)
+        self._answer = (answer or wordlist.get_random_word(length=5)).lower()
 
     @staticmethod
     def from_game_state(game_state: dict):
@@ -93,6 +94,51 @@ class Game:
         return self._guesses_remaining
 
     def guess(self, guess: str):
+        """
+        Doctests:
+
+        >>> game = Game(answer="CADDY")
+        >>> game.guess("DADDY")
+        [<Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>]
+
+        >>> game = Game(answer="CADET")
+        >>> game.guess("CATTY")
+        [<Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.WRONG_LOCATION: 'WRONG_LOCATION'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+         >>> game = Game(answer="FROGS")
+        >>> game.guess("CATTY")
+        [<Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="DADDY")
+        >>> game.guess("DOUBT")
+        [<Score.CORRECT: 'CORRECT'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="CRANK")
+        >>> game.guess("BILLY")
+        [<Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="CRANK")
+        >>> game.guess("TEALS")
+        [<Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.CORRECT: 'CORRECT'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="CRANK")
+        >>> game.guess("SALAD")
+        [<Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.WRONG_LOCATION: 'WRONG_LOCATION'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="CRANK")
+        >>> game.guess("GRAPE")
+        [<Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="CRANK")
+        >>> game.guess("CARRY")
+        [<Score.CORRECT: 'CORRECT'>, <Score.WRONG_LOCATION: 'WRONG_LOCATION'>, <Score.WRONG_LOCATION: 'WRONG_LOCATION'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>, <Score.INCORRECT_LETTER: 'INCORRECT_LETTER'>]
+
+        >>> game = Game(answer="CRANK")
+        >>> game.guess("CRANK")
+        [<Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>, <Score.CORRECT: 'CORRECT'>]
+
+        """
+        guess = guess.lower()
         if self.get_guesses_remaining() == 0:
             return Score.OUT_OF_GUESSES
         if len(guess) != len(self._answer):
@@ -103,15 +149,47 @@ class Game:
         self._guesses_remaining -= 1
         if guess == self._answer:
             return [Score.CORRECT for _ in guess]
+
+        scores = [Score.INCORRECT_LETTER for _ in guess]
+        letters_marked_correct = {letter: 0 for letter in guess}
+        # First, mark the obviously-right letters:
+        for i, (guess_letter, answer_letter) in enumerate(zip(guess, self._answer)):
+            if guess_letter == answer_letter:
+                scores[i] = Score.CORRECT
+                letters_marked_correct[guess_letter] += 1
+
+        # Then, mark the letters that are in the wrong location.
+        # To be considered in the wrong location,
+        # the guess letter must be in the answer
+        # and not already marked as correct.
+        for i, (guess_letter, answer_letter) in enumerate(zip(guess, self._answer)):
+            if (
+                guess_letter in self._answer
+                and scores[i] != Score.CORRECT
+                and letters_marked_correct[guess_letter] == 0
+            ):
+                scores[i] = Score.WRONG_LOCATION
+                letters_marked_correct[guess_letter] -= 1
+
+        return scores
+
         return [
             Score.CORRECT
             if guess_letter == answer_letter
             else (
                 Score.WRONG_LOCATION
-                if guess_letter in self._answer
+                # Only report WRONG_LOCATION if:
+                # - The letter is in the answer
+                # - This letter has only been seen the same number of times as it appears the answer
+                # Otherwise, it's a INCORRECT_LETTER
+                if (
+                    guess_letter in self._answer
+                    and self._answer.count(guess_letter)
+                    >= guess[:i].count(guess_letter)
+                )
                 else Score.INCORRECT_LETTER
             )
-            for guess_letter, answer_letter in zip(guess, self._answer)
+            for i, (guess_letter, answer_letter) in enumerate(zip(guess, self._answer))
         ]
 
 
@@ -241,148 +319,8 @@ class CustomFlask(Flask):
     )
 
 
-# class StatefulGameServer:
-#     """
-#     This is a flask server that lets a player self-identify and play a game.
-
-#     Each game is associated with a user's unique ID. A user generates a UUID
-#     client-side, and the server uses that UUID to identify the game. (This is
-#     not a security feature, but it enables us to have authless games without
-#     sharing the full state client-side.)
-
-#     The ONLY endpoint a user interacts with is the /game/<uuid> endpoint:
-#     POSTS to this endpoint are used to make guesses; the state of the game is
-#     returned in the response. The response is JSON, and the format is:
-
-#         {
-#             "state": "IN_PROGRESS" | "WON" | "LOST" | "FORFEIT",
-#             "guesses_remaining": int,
-#             "number_of_guesses": int,
-#             "guesses": [str, ...],
-#             "scores": [[SCORE], ...]
-#         }
-
-#     When a user posts to this endpoint, we look for the first "IN_PROGRESS"
-#     game they've created. If there is no such game, we create one.
-
-#     If the game is in progress, we check the guess and return the game state.
-
-#     We do not currently support forfeiting, but this will be a way to let a
-#     user give up on a word in the future.
-
-#     DATABASE
-
-#     The database is a DynamoDB table. The table has a single primary key,
-#     "uuid", which is the UUID of the game. The table has two attributes:
-#     * "game_status": the status of the game, (in progress, etc)
-#     * "game_state": the state of the game, encoded as stringified JSON.
-
-#     """
-
-#     def __init__(self, game_state_store_factory: Callable[[], GameStatePersister]):
-#         self._app = CustomFlask(__name__)
-#         CORS(self._app)
-#         self._game_state_store_factory = game_state_store_factory
-
-#         self._app.add_url_rule(
-#             "/game/<uuid>",
-#             "game",
-#             self._game_endpoint,
-#             methods=["POST", "GET"],
-#         )
-
-#         self._app.add_url_rule("/", "index", self._index_endpoint, methods=["GET"])
-
-#     def _index_endpoint(self):
-#         return render_template("index.html")
-
-#     def _game_endpoint(self, uuid: str):
-#         # if this is a GET, we just return the game state
-#         game_state = self._get_game(uuid)
-#         if request.method == "GET":
-#             if game_state is None:
-#                 return jsonify({"error": "NOT_FOUND"})
-#             else:
-#                 # If the game is in progress, remove `answer`:
-#                 if game_state.get("game_status", None) == "IN_PROGRESS":
-#                     game_state["answer"] = None
-
-#                 return jsonify(game_state)
-
-#         # get the guess from the request
-#         guess = request.json["guess"]
-
-#         if game_state is None:
-#             game_state = self._create_game(uuid)
-
-#         # score the guess
-#         print(game_state)
-#         game = Game.from_game_state(game_state)
-#         score = game.guess(guess)
-
-#         if isinstance(score, str):
-#             return jsonify({"error": score})
-
-#         # update the game state
-#         game_state["guesses"].append(guess)
-#         game_state["scores"].append(score)
-#         game_state["guesses_remaining"] -= 1
-
-#         # if you guessed correctly, the game is over
-#         if game.get_answer() == guess:
-#             game_state["game_status"] = "WON"
-#             game_state["guesses_remaining"] = 0
-#         # if you guessed incorrectly, and you have no guesses left, the game is over
-#         elif game_state["guesses_remaining"] == 0:
-#             game_state["game_status"] = "LOST"
-#             game_state["guesses_remaining"] = 0
-#         # otherwise, the game is still in progress
-#         else:
-#             game_state["game_status"] = "IN_PROGRESS"
-
-#         # Save the game state to the database
-#         self._save_game(uuid, game_state)
-
-#         # Return the game state
-#         # If the game is in progress, remove `answer`:
-#         if game_state.get("game_status", None) == "IN_PROGRESS":
-#             game_state["answer"] = None
-#         return jsonify(game_state)
-
-#     def _get_game(self, uuid: str):
-#         game_state_store = self._game_state_store_factory()
-#         return game_state_store.load_game(uuid)
-
-#     def _create_game(self, uuid: str):
-#         # Create a new game
-#         game = Game(answer=wordlist.get_random_word(length=5))
-
-#         # Save the game state to the database
-#         state = game.to_game_state()
-#         self._save_game(uuid, state)
-
-#         return state
-
-#     def _save_game(self, uuid: str, state: dict):
-#         game_state_store = self._game_state_store_factory()
-#         game_state_store.save_game(uuid, state)
-
-#     def serve(self, debug=False):
-#         self._app.run(debug=debug, host="0.0.0.0")
-
-#     def __call__(self, debug=False):
-#         self.serve(debug)
-
-
-# # if __name__ == "__main__":
-# stateful_game_server = StatefulGameServer(
-#     # lambda: JSONFileGameStatePersister()
-#     lambda: DynamoDBGameStatePersister("wordgame-state")
-# )
-# # stateful_game_server.serve(True)
-
-_game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
-# _game_state_store_factory = lambda: JSONFileGameStatePersister()
+# _game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
+_game_state_store_factory = lambda: JSONFileGameStatePersister()
 
 app = CustomFlask(__name__)
 CORS(app)

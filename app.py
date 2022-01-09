@@ -173,25 +173,6 @@ class Game:
 
         return scores
 
-        return [
-            Score.CORRECT
-            if guess_letter == answer_letter
-            else (
-                Score.WRONG_LOCATION
-                # Only report WRONG_LOCATION if:
-                # - The letter is in the answer
-                # - This letter has only been seen the same number of times as it appears the answer
-                # Otherwise, it's a INCORRECT_LETTER
-                if (
-                    guess_letter in self._answer
-                    and self._answer.count(guess_letter)
-                    >= guess[:i].count(guess_letter)
-                )
-                else Score.INCORRECT_LETTER
-            )
-            for i, (guess_letter, answer_letter) in enumerate(zip(guess, self._answer))
-        ]
-
 
 class GameStatePersister(abc.ABC):
     def save_game(self, uuid: str, state: dict):
@@ -319,7 +300,10 @@ class CustomFlask(Flask):
     )
 
 
+# Uncomment this line to run a production database in AWS DynamoDB:
 _game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
+
+# Uncommon this line to run a local debug database:
 # _game_state_store_factory = lambda: JSONFileGameStatePersister()
 
 app = CustomFlask(__name__)

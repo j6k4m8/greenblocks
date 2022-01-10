@@ -301,10 +301,10 @@ class CustomFlask(Flask):
 
 
 # Uncomment this line to run a production database in AWS DynamoDB:
-# _game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
+_game_state_store_factory = lambda: DynamoDBGameStatePersister("wordgame-state")
 
 # Uncommon this line to run a local debug database:
-_game_state_store_factory = lambda: JSONFileGameStatePersister()
+# _game_state_store_factory = lambda: JSONFileGameStatePersister()
 
 app = CustomFlask(__name__)
 CORS(app)

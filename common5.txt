@@ -397,7 +397,6 @@ train
 feeds
 route
 frank
-anime
 speak
 query
 rural
@@ -410,7 +409,6 @@ leads
 minor
 noted
 spent
-davis
 helps
 cycle
 sleep
@@ -419,7 +417,6 @@ drink
 rings
 guess
 ahead
-devel
 delta
 alpha
 bonus
@@ -435,7 +432,6 @@ ratio
 proof
 empty
 ideal
-specs
 parks
 cream
 boxes
@@ -476,7 +472,6 @@ slide
 exact
 bound
 storm
-micro
 dolls
 paint
 delay
@@ -538,7 +533,6 @@ tight
 meant
 plane
 meets
-villa
 inner
 taste
 trips
@@ -580,7 +574,6 @@ alive
 prove
 wings
 ridge
-skill
 moves
 throw
 trend
@@ -634,7 +627,6 @@ lucky
 thick
 vista
 chips
-terry
 flood
 arena
 grown
@@ -670,7 +662,6 @@ barry
 devil
 grass
 sized
-manga
 theft
 swing
 dated

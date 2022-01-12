@@ -9,6 +9,7 @@ from functools import cache
 import abc
 import os
 import json
+import time
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import boto3
@@ -257,7 +258,6 @@ class DynamoDBGameStatePersister(GameStatePersister):
     def save_game(self, uuid: str, state: dict):
         dynamodb = boto3.resource("dynamodb")
         table = dynamodb.Table(self._dynamodb_table_name)
-        print(state)
 
         # Get the current contents:
         response = table.get_item(Key={"uuid": uuid, "game_status": "IN_PROGRESS"})
@@ -265,10 +265,13 @@ class DynamoDBGameStatePersister(GameStatePersister):
             # Delete the old item:
             table.delete_item(Key={"uuid": uuid, "game_status": "IN_PROGRESS"})
         # Write the new item:
+        status = state.get("game_status", "IN_PROGRESS")
+        if status != "IN_PROGRESS":
+            status += f"-{int(time.time() * 1000)}"
         table.put_item(
             Item={
                 "uuid": uuid,
-                "game_status": state.get("game_status", "IN_PROGRESS"),
+                "game_status": status,
                 "state": json.dumps(state),
                 "last_updated": datetime.datetime.now().isoformat(),
             }

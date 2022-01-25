@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Green Blocks | jordan.matelsky.com</title>
+        <script src="https://unpkg.com/vue"></script>
+        <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-4RCVMZSKW6"
+        ></script>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+
+            gtag("config", "G-4RCVMZSKW6");
+        </script>
+    </head>
+    <body>
+        <div id="app"></div>
+
+        <footer>
+            <a
+                class="footer-link"
+                href="https://twitter.com/j6m8"
+                target="_blank"
+            >
+                @j6m8
+            </a>
+            <a
+                class="footer-link"
+                href="https://github.com/j6k4m8/manygreenblocks"
+                target="_blank"
+            >
+                Source Code on GitHub
+            </a>
+            <a
+                class="footer-link"
+                href="https://www.powerlanguage.co.uk/wordle/"
+                target="_blank"
+            >
+                Original Game
+            </a>
+        </footer>
+
+        <style type="text/less">
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                background: #2a2a2a;
+                color: white;
+            }
+
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            footer {
+                text-align: center;
+                /* Don't show on media 750px or shorter */
+                display: none;
+                @media (min-height: 750px) {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                .footer-link {
+                    color: rgb(179, 179, 179);
+                    font-weight: bold;
+                    /* Make things slightly buttonier */
+                    padding: 2px 5px;
+                    border: 1px solid rgb(173, 173, 173);
+                    border-radius: 5px;
+                    /* Make things slightly buttonier */
+                    text-decoration: none;
+                    /* linky */
+                    cursor: pointer;
+                    margin: 1px 5px;
+                }
+                .footer-github-link:hover {
+                    color: #333;
+                    background-color: #efefef;
+                }
+            }
+            .game-container {
+                text-align: center;
+                max-width: 800px;
+                width: 100%;
+                margin: auto;
+                max-height: calc(100vh - 12em);
+                overflow: scroll;
+            }
+            .guess-row {
+                /* A row of five letters */
+                display: flex;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                margin: 0;
+                padding: 0;
+                /*  Don't permit linewrap */
+                white-space: nowrap;
+                max-width: 800px;
+                width: 100%;
+            }
+
+            .guess-letter {
+                /* A single letter. Black outline, bold letter. */
+                font-size: 1em;
+                font-weight: bold;
+                color: white;
+                border: 1px solid #666666;
+                height: 2em;
+                width: 2em;
+                max-height: 19vw;
+                padding: 0;
+                margin: 0.1em;
+                text-align: center;
+                /* vertical align */
+                line-height: 2em;
+                text-transform: uppercase;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+                &.active {
+                    /* some background glow */
+                    box-shadow: cyan 0px 0px 20px 0px;
+                }
+                &.CORRECT {
+                    /* A correct guess */
+                    background-color: #53dd53;
+                    border: 1px solid forestgreen;
+                    color: rgb(11, 70, 11);
+                }
+                &.INCORRECT_LETTER {
+                    /* An incorrect guess */
+                    background-color: #7e7e7e;
+                    border: 1px solid rgb(49, 49, 49);
+                    color: rgb(27, 27, 27);
+                }
+                &.WRONG_LOCATION {
+                    /* A wrong guess */
+                    background-color: #a58734;
+                    border: 1px solid rgb(88, 60, 17);
+                    color: rgb(27, 27, 27);
+                }
+            }
+
+            /* Modals */
+            .modal {
+                position: fixed;
+                width: 70%;
+                bottom: 1%;
+                left: 15%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 100;
+                display: none;
+                pointer-events: none;
+                transition: opacity 0.15s ease-in-out;
+                &.visible {
+                    display: flex;
+                    opacity: 1;
+                    pointer-events: all;
+                }
+                &.win-modal {
+                    /* A modal for when the player wins */
+                    background-color: rgba(38, 87, 5, 0.884);
+                    border: 10px solid #003f00;
+                }
+                &.lose-modal {
+                    /* A modal for when the player loses */
+                    background-color: rgba(44, 44, 44, 0.884);
+                    border: 10px solid #181818;
+                }
+
+                .modal-title {
+                    font-size: 3em;
+                    font-weight: bolder;
+                }
+
+                .modal-action-button {
+                    /* A button to close the modal */
+                    font-size: 1.5em;
+                    font-weight: bold;
+                    padding: 0.5em 1em;
+                    border: 4px solid #003f00;
+                    border-radius: 1px;
+                    text-decoration: none;
+                    cursor: pointer;
+                    margin: 0 5px;
+                }
+            }
+
+            .keyboard {
+                /* stick to the bottom */
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                max-width: 800px;
+                padding-top: 20px;
+                text-align: center;
+
+                .keyboard-row {
+                    display: flex;
+                    flex-direction: row;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0;
+                    padding: 0;
+                    /* flex-wrap: wrap; */
+                    button {
+                        height: 3.5em;
+                        max-width: 3em;
+                        /* Grow to fill */
+                        flex-grow: 1;
+                        padding: 0;
+                        margin: 0.1em;
+                        text-align: center;
+                        line-height: 1em;
+                        text-transform: uppercase;
+                        font-family: "Segoe UI", Tahoma, Geneva, Verdana,
+                            sans-serif;
+                        font-size: 1em;
+                        background: rgb(49, 49, 49);
+                        color: rgb(179, 179, 179);
+                        font-weight: bold;
+                        border: 2px solid rgb(73, 73, 73);
+                    }
+                }
+            }
+
+            .loading-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 100;
+            }
+
+            .loading-spinner {
+                width: 50px;
+                height: 50px;
+                border: 5px solid rgb(51, 116, 190);
+                border-top: 5px solid #333;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+        </style>
+
+        <script src="https://cdn.jsdelivr.net/npm/less@4.1.1"></script>
+        <script>
+            let notifier = new Notyf();
+
+            // Copies a string to the clipboard. Must be called from within an
+            // event handler such as click. May return false if it failed, but
+            // this is not always possible. Browser support for Chrome 43+,
+            // Firefox 42+, Safari 10+, Edge and Internet Explorer 10+.
+            // Internet Explorer: The clipboard feature may be disabled by
+            // an administrator. By default a prompt is shown the first
+            // time the clipboard is used (per session).
+            function copyToClipboard(text) {
+                // https://stackoverflow.com/a/33928558/979255
+                if (window.clipboardData && window.clipboardData.setData) {
+                    // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
+                    return window.clipboardData.setData("Text", text);
+                } else if (
+                    document.queryCommandSupported &&
+                    document.queryCommandSupported("copy")
+                ) {
+                    var textarea = document.createElement("textarea");
+                    textarea.textContent = text;
+                    textarea.style.position = "fixed"; // Prevent scrolling to bottom of page in Microsoft Edge.
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        return document.execCommand("copy"); // Security exception may be thrown by some browsers.
+                    } catch (ex) {
+                        console.warn("Copy to clipboard failed.", ex);
+                        return prompt("Copy to clipboard: Ctrl+C, Enter", text);
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                }
+            }
+
+            function createUUID() {
+                // https://stackoverflow.com/a/66332305/979255
+                return window.URL.createObjectURL(new Blob([])).substr(-36);
+            }
+
+            // Check to see if there's a UUID stored in localStorage. If not,
+            // generate a new one and store it.
+            function getUUID() {
+                var uuid = localStorage.getItem("dis-uuid");
+                if (uuid === null || uuid === "undefined") {
+                    uuid = createUUID();
+                    localStorage.setItem("dis-uuid", uuid);
+                }
+                return uuid;
+            }
+
+            getUUID();
+
+            const GuessRow = {
+                name: "GuessRow",
+                props: {
+                    guess: {
+                        type: String,
+                        required: true,
+                    },
+                    score: {
+                        type: Array,
+                        required: false,
+                    },
+                    activeIndex: {
+                        type: Number,
+                        required: false,
+                    },
+                },
+                methods: {
+                    handleClick(index) {
+                        this.$emit("update:activeIndex", index);
+                    },
+                },
+                template: `
+                    <div class="guess-row">
+                        <div class="guess-letter" :class="score[index] + ' ' + (index === activeIndex ? 'active' : '')"
+                            v-for="(letter, index) in guess" :key="letter + index.toString()" @click="handleClick(index)">
+                            {{ letter }}
+                        </div>
+                        <div class="guess-letter" :class="score[index] + ' ' + ((index+guess.length) === activeIndex ? 'active' : '')"
+                            v-for="index in 10 - guess.length" :key="'blank-' + index.toString()" @click="handleClick(index + guess.length)">
+                            &nbsp;
+                        </div>
+                    </div>
+                `,
+            };
+            const GameBoard = {
+                constructor() {
+                    this.created = this.created.bind(this);
+                },
+                name: "GameBoard",
+                components: {
+                    GuessRow,
+                },
+                data() {
+                    return {
+                        loading: false,
+                        gameState: {
+                            guesses: [],
+                            scores: [],
+                            guesses_remaining: 6,
+                        },
+                        editingGuess: "",
+                        activeIndex: 0,
+                    };
+                },
+
+                methods: {
+                    setActiveIndex(index) {
+                        this.activeIndex = index;
+                    },
+                    updateLetter(index, letter) {
+                        // If the guess isn't long enough, pad it with spaces:
+                        if (this.editingGuess.length < index) {
+                            this.editingGuess += " ".repeat(
+                                index - (this.editingGuess.length - 1)
+                            );
+                            index--;
+                        }
+                        this.editingGuess =
+                            this.editingGuess.substr(0, index) +
+                            letter +
+                            this.editingGuess.substr(index + 1);
+
+                        if (letter === " ") {
+                            this.activeIndex = index - 1;
+                        } else {
+                            this.activeIndex = index + 1;
+                        }
+
+                        if (this.activeIndex >= 10) {
+                            this.activeIndex = 9;
+                        }
+                        if (this.activeIndex < 0) {
+                            this.activeIndex = 0;
+                        }
+                        // Use only first five letters
+                        this.editingGuess = this.editingGuess.substr(0, 10);
+                    },
+
+                    resetState() {
+                        this.gameState.guesses = [];
+                        this.gameState.scores = [];
+                        this.gameState.guesses_remaining = 6;
+                        this.gameState.game_status = "IN_PROGRESS";
+                    },
+
+                    submitGuess() {
+                        if (this.editingGuess.length !== 10) {
+                            return;
+                        }
+
+                        this.loading = true;
+                        fetch(`/disappointing-game/${getUUID()}`, {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                guess: this.editingGuess,
+                            }),
+                        })
+                            .then((response) => {
+                                this.loading = false;
+                                return response.json();
+                            })
+                            .then((data) => {
+                                if (data.error) {
+                                    console.error(data.error);
+                                    notifier.error(
+                                        {
+                                            NOT_A_WORD: "Not a valid word!",
+                                        }[data.error]
+                                    );
+                                    return;
+                                }
+                                this.gameState = data;
+                                this.editingGuess = "";
+                                this.activeIndex = 0;
+                            });
+                    },
+
+                    getColorForKey(letter) {
+                        // Loop through each guess and score.
+                        // If this letter is INCORRECT_LETTER, return grey.
+                        // If this letter is WRONG_LOCATION, return orange.
+                        // If this letter is ever CORRECT, return green.
+                        let best = "#666";
+                        for (
+                            let i = 0;
+                            i < this.gameState.guesses.length;
+                            i++
+                        ) {
+                            for (
+                                let j = 0;
+                                j < this.gameState.guesses[i].length;
+                                j++
+                            ) {
+                                if (this.gameState.guesses[i][j] === letter) {
+                                    if (
+                                        this.gameState.scores[i][j] ===
+                                        "CORRECT"
+                                    ) {
+                                        return "forestgreen";
+                                    } else if (
+                                        this.gameState.scores[i][j] ===
+                                        "WRONG_LOCATION"
+                                    ) {
+                                        best = "#a58734";
+                                    } else {
+                                        if (best === "#666") {
+                                            best = "#999";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        return best;
+                    },
+
+                    copyScoreToClipboard() {
+                        copyToClipboard(this.scoremoji);
+                    },
+                },
+
+                mounted() {
+                    let self = this;
+
+                    document.onkeydown = (e) => {
+                        if (self.gameState.game_status !== "IN_PROGRESS") {
+                            return;
+                        }
+                        // handle backspace:
+                        if (e.key === "Backspace" || e.key === "Delete") {
+                            self.updateLetter(self.activeIndex, " ");
+                        } else if (
+                            e.key.length === 1 &&
+                            e.key >= "a" &&
+                            e.key <= "z"
+                        ) {
+                            self.updateLetter(self.activeIndex, e.key);
+                        } else if (e.key === "ArrowLeft") {
+                            self.activeIndex--;
+                        } else if (e.key === "ArrowRight") {
+                            self.activeIndex++;
+                        } else if (e.key === "Enter") {
+                            self.submitGuess();
+                        }
+                    };
+                    this.loading = true;
+                    fetch(`/disappointing-game/${getUUID()}`)
+                        .then((res) => res.json())
+                        .then((data) => {
+                            this.loading = false;
+                            // If there is an 'error' key in the response,
+                            // then we have an error. Show it; don't update
+                            // the game state.
+                            if (data.error) {
+                                if (data.error === "NOT_FOUND") {
+                                    this.gameState = {
+                                        guesses: [],
+                                        scores: [],
+                                        guesses_remaining: 6,
+                                        game_status: "IN_PROGRESS",
+                                    };
+                                } else {
+                                    console.error(data.error);
+                                }
+                                return;
+                            }
+                            this.gameState = data;
+                        });
+                },
+
+                computed: {
+                    scoremoji() {
+                        function letterToEmoji(letter) {
+                            if (letter === "CORRECT") {
+                                return "🟩";
+                            } else if (letter === "WRONG_LOCATION") {
+                                return "🟨";
+                            } else if (letter === "INCORRECT_LETTER") {
+                                return "⬜";
+                            }
+                            return "";
+                        }
+                        return this.gameState.scores
+                            .map((score) => {
+                                return score.map(letterToEmoji).join("");
+                            })
+                            .join("\n");
+                    },
+                },
+
+                template: `
+                <div>
+                    <div class="loading-overlay" v-if="loading">
+                        <div class="loading-spinner"></div>
+                    </div>
+                    <div class="modal win-modal" :class="gameState.game_status == 'WON' ? 'visible' : ''">
+                        <b class="modal-title">You win!</b>
+                        <p>
+                            <textarea @click="copyScoreToClipboard()" style="font-family: monospace; text-align: center; background: transparent; border: none; font-size: 1.5em" cols=20 rows=7>{{scoremoji}}</textarea>
+                        </p>
+                        <p>
+                            <button class="modal-action-button" @click="resetState()">Play again?</button>
+                        </p>
+                    </div>
+                    <div class="modal lose-modal" :class="gameState.game_status == 'LOST' ? 'visible' : ''">
+                        <b class="modal-title">The word was <code style="text-transform: uppercase">{{gameState.answer}}</code></b>
+                        <p>
+                            <button class="modal-action-button" @click="resetState()">Play again?</button>
+                        </p>
+                    </div>
+                    <div v-for="(guess, guessIndex) in gameState.guesses" :key="'guess' + guessIndex.toString()">
+                        <GuessRow :guess="guess" :score="gameState.scores[guessIndex]" />
+                    </div>
+                    <div v-if="this.gameState.game_status === 'IN_PROGRESS'">
+                        <div>
+                            <GuessRow :guess="editingGuess" :score="['','','','','']" :activeIndex="activeIndex" v-on:update:activeIndex="setActiveIndex($event)" />
+                        </div>
+                        <div v-if="gameState.guesses_remaining - 1 > 0">
+                            <div v-for="remaining in (gameState.guesses_remaining - 1)">
+                                <GuessRow guess="     " :score="['','','','','']" />
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <br />
+                    </div>
+                    <div class="keyboard">
+                        <div class="keyboard-row">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'qwertyuiop'" :key="letter" :style="'background-color: ' + getColorForKey(letter)">
+                                {{letter}}
+                            </button>
+                        </div>
+                        <div class="keyboard-row">
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'asdfghjkl'" :key="letter" :style="'background-color: ' + getColorForKey(letter)">
+                                {{letter}}
+                            </button>
+                        </div>
+                        <div class="keyboard-row">
+                            <button style="background: #555" @click="submitGuess">
+                                ⮕
+                            </button>
+                            <button @click="updateLetter(activeIndex, letter)" v-for="letter in 'zxcvbnm'" :key="letter" :style="'background-color: ' + getColorForKey(letter)">
+                                {{letter}}
+                            </button>
+                            <button style="background: #555" @click="updateLetter(activeIndex, ' ')">
+                                ⌫
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+                `,
+            };
+
+            const App = {
+                components: {
+                    GameBoard,
+                },
+                template: `
+                <div class="game-container">
+                    <h1 align=center style="font-size:1em">Green Blocks &mdash; Disappointment Mode</h1>
+                    <GameBoard />
+                </div>`,
+            };
+
+            new Vue({
+                render: (h) => h(App),
+            }).$mount("#app");
+        </script>
+    </body>
+</html>

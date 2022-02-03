@@ -6,10 +6,9 @@
 
 ## features
 
-* keyboard coloring
-* tap to edit boxes out of order
-* customizable wordlists
-
+-   keyboard coloring
+-   tap to edit boxes out of order
+-   customizable wordlists
 
 ## tour of the codebase
 
@@ -21,8 +20,8 @@ The flask website uses a unique, client-generated ID to keep track of games. The
 
 The server has two main elements: A `Game` object, which handles playing a game, scoring guesses, and letting you know when you're out of guesses; and a `GameStatePersister`. I've written two `GameStatePersister`s, which you can switch in and out depending on your preferences:
 
-* `JSONFileGameStatePersister` stores games in a JSON file on the local machine; this is good for debugging
-* `DynamoDBGameStatePersister` stores the game states in a DynamoDB database in AWS. This is what is used for production workloads.
+-   `JSONFileGameStatePersister` stores games in a JSON file on the local machine; this is good for debugging
+-   `DynamoDBGameStatePersister` stores the game states in a DynamoDB database in AWS. This is what is used for production workloads.
 
 You can also implement your own by implementing the `save_game` and `load_game` methods.
 
@@ -67,3 +66,9 @@ with open("wordlist.txt", "w") as f:
     for word in all_words_len_five:
         f.write(word + "\n")
 ```
+
+## hey wordle is too easy for me, i want sadness!
+
+why don't you try out [disappointment mode](https://greenblocks.jordan.matelsky.com/disappointment)?
+
+<img width="447" alt="image" src="https://user-images.githubusercontent.com/693511/150867604-53dee340-bacd-4efb-80e9-df33f2cfac96.png">

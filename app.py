@@ -49,6 +49,8 @@ class Score(str, Enum):
 
 # common5.txt in the same directory as this file
 wordlist = Wordlist(filename=os.path.join(os.path.dirname(__file__), "common5.txt"))
+wordlist10 = Wordlist(filename=os.path.join(os.path.dirname(__file__), "common10.txt"))
+
 all_valid_words = Wordlist(
     filename=os.path.join(os.path.dirname(__file__), "wordlist.txt")
 )
@@ -68,6 +70,7 @@ class Game:
         self._guesses = guesses or []
         self._scores = scores or []
         self._answer = (answer or wordlist.get_random_word(length=5)).lower()
+        self._all_valid_words = all_valid_words
 
     @staticmethod
     def from_game_state(game_state: dict):
@@ -144,7 +147,7 @@ class Game:
             return Score.OUT_OF_GUESSES
         if len(guess) != len(self._answer):
             return Score.INVALID_GUESS
-        if guess not in all_valid_words:
+        if guess not in self._all_valid_words:
             return Score.NOT_A_WORD
 
         self._guesses_remaining -= 1
@@ -317,6 +320,10 @@ def _index_endpoint():
     return render_template("index.html")
 
 
+def _disappointment_endpoint():
+    return render_template("disappointment.html")
+
+
 def _get_game(uuid: str):
     game_state_store = _game_state_store_factory()
     return game_state_store.load_game(uuid)
@@ -338,7 +345,18 @@ def _create_game(uuid: str):
     return state
 
 
-def _game_endpoint(uuid: str):
+def _create_disappointing_game(uuid: str):
+    # Create a new game
+    game = Game(number_of_guesses=20, answer=wordlist10.get_random_word(length=10))
+
+    # Save the game state to the database
+    state = game.to_game_state()
+    _save_game(uuid, state)
+
+    return state
+
+
+def _game_endpoint_generic(uuid: str, wordlength: int = 5):
     # if this is a GET, we just return the game state
     game_state = _get_game(uuid)
     if request.method == "GET":
@@ -355,10 +373,11 @@ def _game_endpoint(uuid: str):
     guess = request.json["guess"]
 
     if game_state is None:
-        game_state = _create_game(uuid)
+        game_state = (
+            _create_game(uuid) if wordlength == 5 else _create_disappointing_game(uuid)
+        )
 
     # score the guess
-    print(game_state)
     game = Game.from_game_state(game_state)
     score = game.guess(guess)
 
@@ -392,11 +411,28 @@ def _game_endpoint(uuid: str):
     return jsonify(game_state)
 
 
+def _game_endpoint_5(uuid: str):
+    return _game_endpoint_generic(uuid, 5)
+
+
+def _game_endpoint_10(uuid: str):
+    return _game_endpoint_generic(uuid, 10)
+
+
 app.add_url_rule(
     "/game/<uuid>",
     "game",
-    _game_endpoint,
+    _game_endpoint_5,
+    methods=["POST", "GET"],
+)
+app.add_url_rule(
+    "/disappointing-game/<uuid>",
+    "disappointing-game",
+    _game_endpoint_10,
     methods=["POST", "GET"],
 )
 
 app.add_url_rule("/", "index", _index_endpoint, methods=["GET"])
+app.add_url_rule(
+    "/disappointment", "disappointment", _disappointment_endpoint, methods=["GET"]
+)

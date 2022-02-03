@@ -2,6 +2,8 @@
 
 <p align=center>a <a href="https://www.powerlanguage.co.uk/wordle/">Wordle</a> clone, for when you NEED to have another wordle NOW</p>
 
+<p align=center>too smart for wordle? why not try out <a href="https://greenblocks.jordan.matelsky.com/disappointment">Disappointment Mode</a>?</p>
+
 <p align=center><img width="300" alt="image" src="https://user-images.githubusercontent.com/693511/148559904-9717e2b1-c4ce-4db5-afbd-f177ac6967c3.png"></p>
 
 ## features

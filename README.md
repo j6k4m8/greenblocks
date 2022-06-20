@@ -36,9 +36,11 @@ The `Game` object can be used in isolation from the rest of the code. For exampl
 [ your score here ]
 ```
 
-The biggest "gotcha" of the backend code is the scoring mechanism, which requires two passes in order to make sure we're not accidentally scoring the same letter more times than it appears in the answer. (For example, if the answer is `CADDY` and we guess `DROPS`, only ONE of the `D` letters in the guess should be scored as "incorrect location"; the other should be a grey "wrong letter" tile.)
-
 (Note that games played like this will not be persisted to the GameStatePersister of choice.)
+
+---
+
+The biggest "gotcha" of the backend code is the scoring mechanism, which requires two passes in order to make sure we're not accidentally scoring the same letter more times than it appears in the answer. (For example, if the answer is `CADDY` and we guess `DROPS`, only ONE of the `D` letters in the guess should be scored as "incorrect location"; the other should be a grey "wrong letter" tile.)
 
 ### frontend
 
